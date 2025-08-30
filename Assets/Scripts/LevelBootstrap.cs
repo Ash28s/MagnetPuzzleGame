@@ -34,15 +34,7 @@ public class LevelBootstrap : MonoBehaviour
             ball.name = "MetalBall";
         }
 
-        // One test attract magnet (remove later if you want)
-        if (magnetPrefab != null)
-        {
-            var mag = Instantiate(magnetPrefab, new Vector2(-2.5f, 0f), Quaternion.identity);
-            mag.name = "Magnet_Initial";
-            mag.isAttract = true;
-            var sr = mag.GetComponent<SpriteRenderer>();
-            if (sr != null) sr.color = Color.blue;
-        }
+
     }
 
     void BuildMobileBorder()

@@ -4,6 +4,7 @@ using UnityEngine;
 public class MetalBall : MonoBehaviour
 {
     private Rigidbody2D rb;
+    public float maxVelocity = 100f;
     Vector2 startPos;
 
     void Awake()
@@ -22,9 +23,13 @@ public class MetalBall : MonoBehaviour
             transform.localScale = new Vector3(0.5f, 0.5f, 1f); // make it smaller
         }
     }
+    
 
     public void ApplyForce(Vector2 f)
     {
-        rb.AddForce(f, ForceMode2D.Force);
+        if(rb.velocity.magnitude<maxVelocity)
+        {
+        rb.AddForce(-f, ForceMode2D.Force);
+        }
     }
 }
