@@ -110,6 +110,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxVelocity: 50
+  stabilityThreshold: 0.1
 --- !u!212 &2085374049474384944
 SpriteRenderer:
   m_ObjectHideFlags: 0

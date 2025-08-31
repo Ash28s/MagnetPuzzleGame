@@ -4,14 +4,18 @@ public class Magnet : MonoBehaviour
 {
     [Header("Magnet Properties")]
     public bool isAttract = true;
-    public float strength = 25f;           // Reduced from 40f for smoother feel
+    public float strength = 25f;
     public float range = 5f;
     
     [Header("Physics Tuning")]
-    public float minDistance = 0.8f;       // Prevents getting too close
-    public float maxForce = 15f;           // Caps maximum force applied
-    public float smoothingFactor = 0.7f;   // Smoother force application
-    public float pushBackForce = 8f;       // Force to push ball out if too close
+    public float magnetRadius = 0.4f;      // Physical size of magnet
+    public float maxForce = 15f;
+    public float smoothingFactor = 0.7f;
+    public float deadZoneRadius = 0.1f;    // NEW: Complete stop zone around magnet
+    
+    [Header("Stop Mechanics")]
+    public float stopSpeedThreshold = 0.3f;    // Speed below which ball can "stick"
+    public float forceReductionZone = 0.8f;    // Distance from surface where force starts reducing
     
     [Header("Visual Feedback")]
     public bool showRange = true;
@@ -20,8 +24,11 @@ public class Magnet : MonoBehaviour
     private SpriteRenderer sr;
     private MetalBall ball;
     private CircleCollider2D rangeCollider;
-    private Vector2 lastForce = Vector2.zero;  // For smoothing
-    private float baseBrightness = 1f;
+    private CircleCollider2D physicsCollider;
+    private Vector2 lastForce = Vector2.zero;
+    private Rigidbody2D ballRb;
+    private bool ballIsStuck = false;      // NEW: Track if ball is "stuck" to magnet
+    private float ballRadius = 0.25f;
     
     void Awake()
     {
@@ -33,87 +40,158 @@ public class Magnet : MonoBehaviour
         
         transform.localScale = Vector3.one * 0.8f;
         
-        // Setup range visualization
+        // Setup range visualization (trigger)
         rangeCollider = GetComponent<CircleCollider2D>();
         if (rangeCollider == null) rangeCollider = gameObject.AddComponent<CircleCollider2D>();
         rangeCollider.isTrigger = true;
         rangeCollider.radius = range;
         
+        // Setup physical collision boundary (solid)
+        physicsCollider = gameObject.AddComponent<CircleCollider2D>();
+        physicsCollider.isTrigger = false;
+        physicsCollider.radius = magnetRadius;
+        
+        // NO bounce material - completely stop motion
+        PhysicsMaterial2D noBounceMaterial = new PhysicsMaterial2D("NoBounceMagnet");
+        noBounceMaterial.friction = 1f;        // High friction to stop sliding
+        noBounceMaterial.bounciness = 0f;      // No bounce at all
+        physicsCollider.sharedMaterial = noBounceMaterial;
+        
         ball = FindObjectOfType<MetalBall>();
+        if (ball != null)
+        {
+            ballRb = ball.GetComponent<Rigidbody2D>();
+            var ballCollider = ball.GetComponent<CircleCollider2D>();
+            if (ballCollider != null) ballRadius = ballCollider.radius;
+        }
+        
         UpdateVisuals();
     }
     
-    void Start()
-    {
-        // Ensure ball has proper physics settings for smooth movement
-        if (ball != null)
-        {
-            var rb = ball.GetComponent<Rigidbody2D>();
-            if (rb != null)
-            {
-                rb.drag = 1.5f;           // Add some drag for smoothness
-                rb.angularDrag = 3f;      // Reduce spinning
-                rb.gravityScale = 0f;     // No gravity for pure magnet physics
-            }
-        }
-    }
-    
-    // Use FixedUpdate for consistent physics
     void FixedUpdate()
     {
-        if (ball == null) return;
+        if (ball == null || ballRb == null) return;
+        
+        float distance = Vector2.Distance(transform.position, ball.transform.position);
+        float surfaceDistance = magnetRadius + ballRadius;
+        
+        // Check if ball should be "stuck" (for attract magnets only)
+        if (isAttract && distance <= surfaceDistance + deadZoneRadius)
+        {
+            if (ballRb.velocity.magnitude <= stopSpeedThreshold)
+            {
+                // STICK the ball - complete stop
+                StickBallToSurface();
+                UpdateVisualFeedback();
+                return;
+            }
+        }
+        
+        // Check if stuck ball should be released
+        if (ballIsStuck)
+        {
+            if (!isAttract || distance > surfaceDistance + deadZoneRadius * 2f)
+            {
+                ballIsStuck = false; // Release the ball
+            }
+            else
+            {
+                // Keep it stuck
+                StickBallToSurface();
+                UpdateVisualFeedback();
+                return;
+            }
+        }
         
         Vector2 force = CalculateMagneticForce();
         ApplySmoothForce(force);
         UpdateVisualFeedback();
     }
     
-    Vector2 CalculateMagneticForce()
-{
-    Vector2 direction = (Vector2)transform.position - (Vector2)ball.transform.position; // FLIPPED!
-    float distance = direction.magnitude;
-    
-    // Outside range - no force
-    if (distance > range) return Vector2.zero;
-    
-    // Too close - push away regardless of magnet type
-    if (distance < minDistance)
+    void StickBallToSurface()
     {
-        Vector2 pushForce = -direction.normalized * pushBackForce; // Push away from magnet
-        return pushForce;
+        ballIsStuck = true;
+        
+        // Position ball exactly at surface
+        Vector2 direction = ((Vector2)ball.transform.position - (Vector2)transform.position).normalized;
+        Vector2 targetPosition = (Vector2)transform.position + direction * (magnetRadius + ballRadius);
+        
+        // Hard snap to position
+        ballRb.position = targetPosition;
+        ballRb.velocity = Vector2.zero;
+        ballRb.angularVelocity = 0f;
+        lastForce = Vector2.zero;
     }
     
-    // Calculate magnetic force with smoother falloff
-    float normalizedDistance = distance / range;
-    
-    // Use smoother force curve (less aggressive than inverse square)
-    float forceMagnitude = strength * (1f - normalizedDistance * normalizedDistance);
-    
-    // Clamp maximum force
-    forceMagnitude = Mathf.Min(forceMagnitude, maxForce);
-    
-    Vector2 force = direction.normalized * forceMagnitude;
-    
-    // Apply attraction/repulsion
-    if (!isAttract) force = -force;
-    
-    return force;
-}
+    Vector2 CalculateMagneticForce()
+    {
+        Vector2 direction = (Vector2)transform.position - (Vector2)ball.transform.position;
+        float distance = direction.magnitude;
+        
+        // Outside range - no force
+        if (distance > range) return Vector2.zero;
+        
+        // Near surface - dramatically reduce force to prevent oscillation
+        float surfaceDistance = magnetRadius + ballRadius;
+        if (distance < surfaceDistance + forceReductionZone)
+        {
+            float distanceFromSurface = distance - surfaceDistance;
+            if (distanceFromSurface < 0.05f) // Very close to surface
+            {
+                return Vector2.zero; // No force when at surface
+            }
+            
+            // Reduce force based on proximity to surface
+            float forceMultiplier = distanceFromSurface / forceReductionZone;
+            forceMultiplier = Mathf.Clamp01(forceMultiplier);
+            
+            float reducedStrength = strength * forceMultiplier * 0.3f; // Much weaker near surface
+            float normalizedDistance = distance / range;
+            float forceMagnitude = reducedStrength * (1f - normalizedDistance * normalizedDistance);
+            
+            Vector2 force = direction.normalized * forceMagnitude;
+            return isAttract ? force : -force;
+        }
+        
+        // Normal force calculation
+        float normalizedDist = distance / range;
+        float forceMag = strength * (1f - normalizedDist * normalizedDist);
+        forceMag = Mathf.Min(forceMag, maxForce);
+        
+        Vector2 normalForce = direction.normalized * forceMag;
+        return isAttract ? normalForce : -normalForce;
+    }
     
     void ApplySmoothForce(Vector2 targetForce)
     {
-        // Smooth force transition to prevent jitter
-        lastForce = Vector2.Lerp(lastForce, targetForce, smoothingFactor);
+        if (ballIsStuck) return; // Don't apply force when stuck
         
-        // Apply the smoothed force
+        lastForce = Vector2.Lerp(lastForce, targetForce, smoothingFactor);
         ball.ApplyForce(lastForce);
+    }
+    
+    public void Toggle()
+    {
+        isAttract = !isAttract;
+        ballIsStuck = false; // Release ball when toggling
+        UpdateVisuals();
+        lastForce = Vector2.zero;
+    }
+    
+    void UpdateVisuals()
+    {
+        if (sr != null)
+        {
+            Color baseColor = isAttract ? Color.blue : Color.red;
+            if (ballIsStuck) baseColor = Color.Lerp(baseColor, Color.white, 0.3f); // Lighter when stuck
+            sr.color = baseColor;
+        }
     }
     
     void UpdateVisualFeedback()
     {
         if (!showRange || sr == null) return;
         
-        // Pulse effect when ball is in range
         Vector2 direction = (Vector2)ball.transform.position - (Vector2)transform.position;
         float distance = direction.magnitude;
         
@@ -123,48 +201,33 @@ public class Magnet : MonoBehaviour
             float pulse = 1f + (Mathf.Sin(Time.time * pulseSpeed) * 0.2f * pulseIntensity);
             
             Color currentColor = isAttract ? Color.blue : Color.red;
+            if (ballIsStuck) currentColor = Color.Lerp(currentColor, Color.white, 0.4f);
             currentColor *= pulse;
             sr.color = currentColor;
         }
         else
         {
-            // Default color when ball is out of range
             sr.color = isAttract ? Color.blue : Color.red;
         }
     }
     
-    public void Toggle()
-    {
-        isAttract = !isAttract;
-        UpdateVisuals();
-        
-        // Reset smoothing when polarity changes
-        lastForce = Vector2.zero;
-    }
-    
-    void UpdateVisuals()
-    {
-        if (sr != null)
-        {
-            sr.color = isAttract ? Color.blue : Color.red;
-        }
-    }
-    
-    // Visual debugging in Scene view
     void OnDrawGizmosSelected()
     {
         // Draw range circle
         Gizmos.color = isAttract ? Color.blue * 0.3f : Color.red * 0.3f;
         Gizmos.DrawWireSphere(transform.position, range);
         
-        // Draw minimum distance circle
-        Gizmos.color = Color.yellow * 0.5f;
-        Gizmos.DrawWireSphere(transform.position, minDistance);
+        // Draw physical boundary
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireSphere(transform.position, magnetRadius);
         
-        // Draw force vector if in play mode
+        // Draw dead zone
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, magnetRadius + ballRadius + deadZoneRadius);
+        
         if (Application.isPlaying && ball != null)
         {
-            Gizmos.color = Color.white;
+            Gizmos.color = ballIsStuck ? Color.green : Color.red;
             Gizmos.DrawRay(transform.position, lastForce.normalized * 2f);
         }
     }
