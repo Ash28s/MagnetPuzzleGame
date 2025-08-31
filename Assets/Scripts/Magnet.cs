@@ -69,36 +69,36 @@ public class Magnet : MonoBehaviour
     }
     
     Vector2 CalculateMagneticForce()
+{
+    Vector2 direction = (Vector2)transform.position - (Vector2)ball.transform.position; // FLIPPED!
+    float distance = direction.magnitude;
+    
+    // Outside range - no force
+    if (distance > range) return Vector2.zero;
+    
+    // Too close - push away regardless of magnet type
+    if (distance < minDistance)
     {
-        Vector2 direction = (Vector2)ball.transform.position - (Vector2)transform.position;
-        float distance = direction.magnitude;
-        
-        // Outside range - no force
-        if (distance > range) return Vector2.zero;
-        
-        // Too close - push away regardless of magnet type
-        if (distance < minDistance)
-        {
-            Vector2 pushForce = direction.normalized * pushBackForce;
-            return pushForce; // Always push away when too close
-        }
-        
-        // Calculate magnetic force with smoother falloff
-        float normalizedDistance = distance / range;
-        
-        // Use smoother force curve (less aggressive than inverse square)
-        float forceMagnitude = strength * (1f - normalizedDistance * normalizedDistance);
-        
-        // Clamp maximum force
-        forceMagnitude = Mathf.Min(forceMagnitude, maxForce);
-        
-        Vector2 force = direction.normalized * forceMagnitude;
-        
-        // Apply attraction/repulsion
-        if (!isAttract) force = -force;
-        
-        return force;
+        Vector2 pushForce = -direction.normalized * pushBackForce; // Push away from magnet
+        return pushForce;
     }
+    
+    // Calculate magnetic force with smoother falloff
+    float normalizedDistance = distance / range;
+    
+    // Use smoother force curve (less aggressive than inverse square)
+    float forceMagnitude = strength * (1f - normalizedDistance * normalizedDistance);
+    
+    // Clamp maximum force
+    forceMagnitude = Mathf.Min(forceMagnitude, maxForce);
+    
+    Vector2 force = direction.normalized * forceMagnitude;
+    
+    // Apply attraction/repulsion
+    if (!isAttract) force = -force;
+    
+    return force;
+}
     
     void ApplySmoothForce(Vector2 targetForce)
     {
