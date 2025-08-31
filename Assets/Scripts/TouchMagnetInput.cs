@@ -30,6 +30,10 @@ public class TouchMagnetInput : MonoBehaviour
     Dictionary<int, TapInfo> activeTouches = new Dictionary<int, TapInfo>();
     float lastMouseClickTime = -1f;
     int mouseClickCount = 0;
+    
+    // For double-tap removal tracking
+    private static float lastTapTime = -1f;
+    private static Magnet lastTappedMagnet = null;
 
     void Awake()
     {
@@ -50,11 +54,26 @@ public class TouchMagnetInput : MonoBehaviour
     {
         if (Input.touchCount == 0)
         {
-            // Clear active touches that ended last frame
+            // Clean up ended touches
+            var toRemove = new List<int>();
+            foreach(var kvp in activeTouches)
+            {
+                bool stillActive = false;
+                for(int i = 0; i < Input.touchCount; i++)
+                {
+                    if(Input.GetTouch(i).fingerId == kvp.Key)
+                    {
+                        stillActive = true;
+                        break;
+                    }
+                }
+                if(!stillActive) toRemove.Add(kvp.Key);
+            }
+            foreach(int id in toRemove) activeTouches.Remove(id);
             return;
         }
 
-        // Register began
+        // Process all active touches
         for (int i = 0; i < Input.touchCount; i++)
         {
             Touch t = Input.GetTouch(i);
@@ -89,11 +108,11 @@ public class TouchMagnetInput : MonoBehaviour
         info.pressedMagnet = MagnetUnderScreenPoint(t.position);
         activeTouches[t.fingerId] = info;
 
-        // Two finger simultaneous tap = spawn repel magnet at average
+        // Two finger simultaneous tap = spawn repel magnet at average position
         if (Input.touchCount == 2)
         {
             Touch other = GetOtherTouch(t.fingerId);
-            if (other.phase == TouchPhase.Began)
+            if (other.phase == TouchPhase.Began || (Time.time - GetTouchInfo(other.fingerId)?.downTime) < 0.1f)
             {
                 Vector2 avgScreen = 0.5f * (t.position + other.position);
                 SpawnMagnetAtScreen(avgScreen, attract: false);
@@ -105,6 +124,7 @@ public class TouchMagnetInput : MonoBehaviour
     {
         if (!activeTouches.TryGetValue(t.fingerId, out var info)) return;
 
+        // Long press on magnet = toggle polarity
         if (!info.longPressTriggered && info.pressedMagnet != null)
         {
             if (Time.time - info.downTime >= longPressThreshold)
@@ -122,64 +142,50 @@ public class TouchMagnetInput : MonoBehaviour
 
         float duration = Time.time - info.downTime;
 
-        // If this was a short tap (no long press)
+        // If this was a short tap (no long press triggered)
         if (!info.longPressTriggered && duration < longPressThreshold)
         {
-            // Double tap detection (on magnet)
+            // Handle double tap removal
             if (info.pressedMagnet != null)
             {
-                // Use magnet instanceID as key or simple time diff
-                if (Time.time - info.firstTapTime <= doubleTapMaxGap)
+                HandleDoubleTapRemoval(info.pressedMagnet);
+            }
+            else
+            {
+                // Single finger tap on empty space = attract magnet
+                if (Input.touchCount == 1)
                 {
-                    // Second tap within same info (rare for single finger).
-                    // We do removal only if we detect a second tap pattern; simpler approach:
-                    // Keep a global lastTap data.
+                    SpawnMagnetAtScreen(info.position, attract: true);
                 }
             }
-
-            // Single finger tap (not on existing magnet) => attract magnet
-            if (info.pressedMagnet == null && Input.touchCount == 1)
-            {
-                SpawnMagnetAtScreen(info.position, attract: true);
-            }
-
-            // Double tap removal logic (global)
-            HandleDoubleTapRemoval(info);
         }
 
         activeTouches.Remove(t.fingerId);
     }
 
-    void HandleDoubleTapRemoval(TapInfo info)
+    void HandleDoubleTapRemoval(Magnet magnet)
     {
-        // We store last tap static
-        const string key = "_lastDoubleTapTime";
-        // We'll just keep one last tap timestamp & magnet
-        // Simpler: reuse static fields
-        if (info.pressedMagnet == null) return;
+        if (magnet == null) return;
 
-        if (!PlayerPrefs.HasKey(key))
+        if (lastTappedMagnet == magnet && Time.time - lastTapTime <= doubleTapMaxGap)
         {
-            PlayerPrefs.SetFloat(key, Time.time);
-            PlayerPrefs.SetInt("_lastMagnetID", info.pressedMagnet.GetInstanceID());
-            return;
-        }
-
-        float lastTime = PlayerPrefs.GetFloat(key);
-        int lastId = PlayerPrefs.GetInt("_lastMagnetID");
-
-        if (Time.time - lastTime <= doubleTapMaxGap && lastId == info.pressedMagnet.GetInstanceID())
-        {
-            // Remove
-            Destroy(info.pressedMagnet.gameObject);
-            PlayerPrefs.DeleteKey(key);
-            PlayerPrefs.DeleteKey("_lastMagnetID");
+            // Double tap detected - remove magnet
+            Destroy(magnet.gameObject);
+            lastTappedMagnet = null;
+            lastTapTime = -1f;
         }
         else
         {
-            PlayerPrefs.SetFloat(key, Time.time);
-            PlayerPrefs.SetInt("_lastMagnetID", info.pressedMagnet.GetInstanceID());
+            // First tap - remember it
+            lastTappedMagnet = magnet;
+            lastTapTime = Time.time;
         }
+    }
+
+    TapInfo GetTouchInfo(int fingerId)
+    {
+        activeTouches.TryGetValue(fingerId, out var info);
+        return info;
     }
 
     Touch GetOtherTouch(int currentId)
@@ -195,19 +201,47 @@ public class TouchMagnetInput : MonoBehaviour
     // ---------------- SPAWNING ----------------
     void SpawnMagnetAtScreen(Vector2 screenPos, bool attract)
     {
-        if (magnetPrefab == null) return;
+        if (magnetPrefab == null) 
+        {
+            Debug.LogWarning("Magnet prefab not assigned!");
+            return;
+        }
+        
         Vector3 world = cam.ScreenToWorldPoint(screenPos);
         world.z = 0f;
 
         if (bootstrap != null)
             world = bootstrap.ClampInside(world, spawnClampMargin);
 
+        // Instantiate the magnet
         var m = Instantiate(magnetPrefab, world, Quaternion.identity);
+        
+        // Set the attract property FIRST
         m.isAttract = attract;
+        
+        // Force visual update
         var sr = m.GetComponent<SpriteRenderer>();
         if (sr != null)
+        {
             sr.color = attract ? Color.blue : Color.red;
+        }
+        
+        // Update the sprite if using SpriteCreator
+        if (sr != null && sr.sprite == null)
+        {
+            sr.sprite = SpriteCreator.CreateSquareSprite(attract ? Color.blue : Color.red);
+        }
+        
+        // Call magnet's update method if it exists
+        if (m.GetComponent<Magnet>() != null)
+        {
+            // Force the magnet to refresh its visuals
+            m.SendMessage("UpdateVisuals", SendMessageOptions.DontRequireReceiver);
+        }
+        
         m.name = attract ? "Magnet_Attract" : "Magnet_Repel";
+        
+        Debug.Log($"Spawned {(attract ? "ATTRACT" : "REPEL")} magnet at {world}");
     }
 
     Magnet MagnetUnderScreenPoint(Vector2 screenPos)
@@ -224,36 +258,78 @@ public class TouchMagnetInput : MonoBehaviour
     // ---------------- MOUSE FALLBACK (EDITOR) ----------------
     void HandleMouseFallback()
     {
-        // Left click = attract
+        // Don't handle mouse if we have active touches
+        if (Input.touchCount > 0) return;
+
+        // Left click = attract magnet (BLUE)
         if (Input.GetMouseButtonDown(0))
         {
-            SpawnMagnetAtScreen(Input.mousePosition, true);
+            // Check if clicking on existing magnet for double-click removal
+            var magnet = MagnetUnderScreenPoint(Input.mousePosition);
+            if (magnet != null)
+            {
+                // Handle double click removal
+                float timeSinceLastClick = Time.time - lastMouseClickTime;
+                if (timeSinceLastClick <= doubleTapMaxGap)
+                {
+                    mouseClickCount++;
+                    if (mouseClickCount >= 2)
+                    {
+                        Destroy(magnet.gameObject);
+                        mouseClickCount = 0;
+                        Debug.Log("Removed magnet via double-click");
+                    }
+                }
+                else
+                {
+                    mouseClickCount = 1;
+                }
+                lastMouseClickTime = Time.time;
+            }
+            else
+            {
+                // Spawn attract magnet
+                SpawnMagnetAtScreen(Input.mousePosition, true);
+                mouseClickCount = 0;
+            }
         }
-        // Right click = repel
+
+        // Right click = repel magnet (RED)
         if (Input.GetMouseButtonDown(1))
         {
             SpawnMagnetAtScreen(Input.mousePosition, false);
         }
 
-        // Double click remove
-        if (Input.GetMouseButtonDown(0))
+        // Middle click = toggle magnet under cursor
+        if (Input.GetMouseButtonDown(2))
         {
-            float t = Time.time;
-            if (t - lastMouseClickTime <= doubleTapMaxGap)
+            var magnet = MagnetUnderScreenPoint(Input.mousePosition);
+            if (magnet != null)
             {
-                mouseClickCount++;
-                if (mouseClickCount == 2)
-                {
-                    var mag = MagnetUnderScreenPoint(Input.mousePosition);
-                    if (mag != null) Destroy(mag.gameObject);
-                    mouseClickCount = 0;
-                }
+                magnet.Toggle();
+                Debug.Log($"Toggled magnet to {(magnet.isAttract ? "ATTRACT" : "REPEL")}");
             }
-            else
-            {
-                mouseClickCount = 1;
-            }
-            lastMouseClickTime = t;
+        }
+
+        // Keyboard shortcuts for testing
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            SpawnMagnetAtScreen(Input.mousePosition, true);
+            Debug.Log("Spawned ATTRACT magnet via 'A' key");
+        }
+        
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SpawnMagnetAtScreen(Input.mousePosition, false);
+            Debug.Log("Spawned REPEL magnet via 'R' key");
+        }
+        
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            var magnets = FindObjectsOfType<Magnet>();
+            foreach(var mag in magnets)
+                Destroy(mag.gameObject);
+            Debug.Log($"Cleared {magnets.Length} magnets");
         }
     }
 }
