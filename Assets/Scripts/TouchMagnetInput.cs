@@ -30,7 +30,7 @@ public class TouchMagnetInput : MonoBehaviour
     Dictionary<int, TapInfo> activeTouches = new Dictionary<int, TapInfo>();
     float lastMouseClickTime = -1f;
     int mouseClickCount = 0;
-    
+
     // For double-tap removal tracking
     private static float lastTapTime = -1f;
     private static Magnet lastTappedMagnet = null;
@@ -56,20 +56,20 @@ public class TouchMagnetInput : MonoBehaviour
         {
             // Clean up ended touches
             var toRemove = new List<int>();
-            foreach(var kvp in activeTouches)
+            foreach (var kvp in activeTouches)
             {
                 bool stillActive = false;
-                for(int i = 0; i < Input.touchCount; i++)
+                for (int i = 0; i < Input.touchCount; i++)
                 {
-                    if(Input.GetTouch(i).fingerId == kvp.Key)
+                    if (Input.GetTouch(i).fingerId == kvp.Key)
                     {
                         stillActive = true;
                         break;
                     }
                 }
-                if(!stillActive) toRemove.Add(kvp.Key);
+                if (!stillActive) toRemove.Add(kvp.Key);
             }
-            foreach(int id in toRemove) activeTouches.Remove(id);
+            foreach (int id in toRemove) activeTouches.Remove(id);
             return;
         }
 
@@ -201,12 +201,17 @@ public class TouchMagnetInput : MonoBehaviour
     // ---------------- SPAWNING ----------------
     void SpawnMagnetAtScreen(Vector2 screenPos, bool attract)
     {
-        if (magnetPrefab == null) 
+        if (GameManager.Instance != null && !GameManager.Instance.CanSpawnMagnet())
+        {
+            Debug.Log("Maximum magnets reached!");
+            return;
+        }
+        if (magnetPrefab == null)
         {
             Debug.LogWarning("Magnet prefab not assigned!");
             return;
         }
-        
+
         Vector3 world = cam.ScreenToWorldPoint(screenPos);
         world.z = 0f;
 
@@ -215,32 +220,32 @@ public class TouchMagnetInput : MonoBehaviour
 
         // Instantiate the magnet
         var m = Instantiate(magnetPrefab, world, Quaternion.identity);
-        
+
         // Set the attract property FIRST
         m.isAttract = attract;
-        
+
         // Force visual update
         var sr = m.GetComponent<SpriteRenderer>();
         if (sr != null)
         {
             sr.color = attract ? Color.blue : Color.red;
         }
-        
+
         // Update the sprite if using SpriteCreator
         if (sr != null && sr.sprite == null)
         {
             sr.sprite = SpriteCreator.CreateSquareSprite(attract ? Color.blue : Color.red);
         }
-        
+
         // Call magnet's update method if it exists
         if (m.GetComponent<Magnet>() != null)
         {
             // Force the magnet to refresh its visuals
             m.SendMessage("UpdateVisuals", SendMessageOptions.DontRequireReceiver);
         }
-        
+
         m.name = attract ? "Magnet_Attract" : "Magnet_Repel";
-        
+
         Debug.Log($"Spawned {(attract ? "ATTRACT" : "REPEL")} magnet at {world}");
     }
 
@@ -317,17 +322,17 @@ public class TouchMagnetInput : MonoBehaviour
             SpawnMagnetAtScreen(Input.mousePosition, true);
             Debug.Log("Spawned ATTRACT magnet via 'A' key");
         }
-        
+
         if (Input.GetKeyDown(KeyCode.R))
         {
             SpawnMagnetAtScreen(Input.mousePosition, false);
             Debug.Log("Spawned REPEL magnet via 'R' key");
         }
-        
+
         if (Input.GetKeyDown(KeyCode.C))
         {
             var magnets = FindObjectsOfType<Magnet>();
-            foreach(var mag in magnets)
+            foreach (var mag in magnets)
                 Destroy(mag.gameObject);
             Debug.Log($"Cleared {magnets.Length} magnets");
         }

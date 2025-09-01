@@ -28,6 +28,11 @@ public class SimpleMagnetSpawner : MonoBehaviour
 
     void Spawn(bool attract)
     {
+        if (GameManager.Instance != null && !GameManager.Instance.CanSpawnMagnet())
+        {
+            Debug.Log("Maximum magnets reached!");
+            return;
+        }
         Vector2 world = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         var m = Instantiate(magnetPrefab, world, Quaternion.identity);
         m.isAttract = attract;
