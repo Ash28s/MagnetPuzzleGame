@@ -49,10 +49,12 @@ MonoBehaviour:
   isAttract: 1
   strength: 10
   range: 5
-  minDistance: 0.8
+  magnetRadius: 0.4
   maxForce: 15
   smoothingFactor: 0.7
-  pushBackForce: 8
+  deadZoneRadius: 0.1
+  stopSpeedThreshold: 0.3
+  forceReductionZone: 0.8
   showRange: 1
   pulseSpeed: 2
 --- !u!212 &377942428691905830
@@ -96,7 +98,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: fc83a361f7575e1acb987893becd66aa, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 10c66757c55993e4984387c9bffb41c5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -139,6 +141,6 @@ CircleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: -0.020388424}
+  m_Offset: {x: 0, y: 0.114712775}
   serializedVersion: 2
-  m_Radius: 0.8737884
+  m_Radius: 0.7452776
