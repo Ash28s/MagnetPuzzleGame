@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "MagnetPuzzleGame.sln"
+    "dotnet.defaultSolution": "Magnet Puzzle Game.sln"
 }

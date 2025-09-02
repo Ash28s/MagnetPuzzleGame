@@ -7,6 +7,9 @@ public class MetalBall : MonoBehaviour
     public float maxVelocity = 8f;        // Prevent ball from moving too fast
     public float stabilityThreshold = 0.1f; // Minimum velocity before stopping
     
+    [Header("Collision Detection")]
+    public string obstacleTag = "Obstacle";    // Tag for obstacle objects
+    
     private Rigidbody2D rb;
     private Vector2 startPos;
     
@@ -34,6 +37,7 @@ public class MetalBall : MonoBehaviour
         // Setup collider
         var col = GetComponent<CircleCollider2D>();
         col.radius = 0.25f;
+        col.isTrigger = false; // Make sure it's a solid collider for obstacle detection
     }
     
     void FixedUpdate()
@@ -49,6 +53,49 @@ public class MetalBall : MonoBehaviour
         {
             rb.velocity *= 0.9f; // Gradual slowdown
         }
+    }
+    
+    // Collision detection for obstacles
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        // Check if ball hit an obstacle
+        if (collision.gameObject.CompareTag(obstacleTag))
+        {
+            Debug.Log("Ball hit obstacle: " + collision.gameObject.name);
+            HandleObstacleHit();
+        }
+    }
+    
+    // Alternative trigger detection (if obstacles are set as triggers)
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        // Check if ball entered an obstacle trigger
+        if (other.CompareTag(obstacleTag))
+        {
+            Debug.Log("Ball entered obstacle trigger: " + other.gameObject.name);
+            HandleObstacleHit();
+        }
+    }
+    
+    void HandleObstacleHit()
+    {
+        Debug.Log("HandleObstacleHit called!");
+        
+        // Stop the ball immediately
+        rb.velocity = Vector2.zero;
+        rb.angularVelocity = 0f;
+        
+        // Check if GameManager instance exists
+        if (GameManager.Instance == null)
+        {
+            Debug.LogError("GameManager.Instance is null!");
+            return;
+        }
+        
+        Debug.Log("Calling GameManager.TriggerGameOver...");
+        
+        // Call the public TriggerGameOver method
+        GameManager.Instance.TriggerGameOver("Ball Hit Obstacle!");
     }
     
     public void ApplyForce(Vector2 force)
