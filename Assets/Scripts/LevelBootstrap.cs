@@ -27,14 +27,16 @@ public class LevelBootstrap : MonoBehaviour
 
         BuildMobileBorder();   // dynamic based on camera
 
-        // Spawn ball at center
+    }
+
+    //Level Generator calls SpawnBall
+    public void SpawnBall(Vector3 pos)
+    {
         if (ballPrefab != null)
         {
-            var ball = Instantiate(ballPrefab, Vector3.zero, Quaternion.identity);
+            var ball = Instantiate(ballPrefab, pos, Quaternion.identity);
             ball.name = "MetalBall";
         }
-
-
     }
 
     void BuildMobileBorder()
