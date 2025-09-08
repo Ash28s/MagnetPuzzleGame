@@ -26,10 +26,9 @@ public class LevelBootstrap : MonoBehaviour
         if (floorSprite == null) floorSprite = SpriteCreator.CreateSquareSprite(new Color(0.38f, 0.38f, 0.43f));
 
         BuildMobileBorder();   // dynamic based on camera
-
     }
 
-    //Level Generator calls SpawnBall
+    // Level Generator calls SpawnBall
     public void SpawnBall(Vector3 pos)
     {
         if (ballPrefab != null)
@@ -77,6 +76,7 @@ public class LevelBootstrap : MonoBehaviour
         sr.drawMode = SpriteDrawMode.Sliced;
         sr.size = size;
         sr.sortingOrder = 0;
+        sr.enabled = false; // Disable the SpriteRenderer to prevent rendering
         g.layer = LayerMask.NameToLayer("Ground");
 
         var col = g.AddComponent<BoxCollider2D>();
