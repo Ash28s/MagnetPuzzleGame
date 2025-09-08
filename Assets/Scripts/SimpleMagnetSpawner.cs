@@ -5,6 +5,7 @@ public class SimpleMagnetSpawner : MonoBehaviour
     public Magnet magnetPrefab;
     public KeyCode attractKey = KeyCode.A;
     public KeyCode repelKey = KeyCode.D;
+    public GameManager gameManager;
 
     void Update()
     {
@@ -28,7 +29,7 @@ public class SimpleMagnetSpawner : MonoBehaviour
 
     void Spawn(bool attract)
     {
-        if (GameManager.Instance != null && !GameManager.Instance.CanSpawnMagnet())
+        if (!gameManager.CanSpawnMagnet())
         {
             Debug.Log("Maximum magnets reached!");
             return;
