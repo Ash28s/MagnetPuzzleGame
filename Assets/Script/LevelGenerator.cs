@@ -22,7 +22,7 @@ public class LevelGenerator : MonoBehaviour
     void Start()
     {
         Random.InitState(randomSeed);
-        level = PlayerPrefs.GetInt("Level",0);
+        level = PlayerPrefs.GetInt("Level",1);
         GenerateLevel();
     }
 
@@ -73,7 +73,7 @@ public class LevelGenerator : MonoBehaviour
             }
 
             // Place random obstacles
-            int numObstacles = (int)(width * height * (obstacleDensity+level/100));
+            int numObstacles = (int)(width * height * (obstacleDensity+level/100f));
             List<Vector2Int> positions = new List<Vector2Int>();
             for (int y = 0; y < height; y++)
             {

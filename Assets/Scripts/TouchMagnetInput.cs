@@ -15,7 +15,7 @@ public class TouchMagnetInput : MonoBehaviour
     public float spawnClampMargin = 0.4f;
 
     Camera cam;
-
+    public GameManager gameManager;
     // Tracking taps
     class TapInfo
     {
@@ -201,7 +201,7 @@ public class TouchMagnetInput : MonoBehaviour
     // ---------------- SPAWNING ----------------
     void SpawnMagnetAtScreen(Vector2 screenPos, bool attract)
     {
-        if (GameManager.Instance != null && !GameManager.Instance.CanSpawnMagnet())
+        if (gameManager != null && !gameManager.CanSpawnMagnet())
         {
             Debug.Log("Maximum magnets reached!");
             return;

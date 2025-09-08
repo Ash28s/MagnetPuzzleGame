@@ -89,7 +89,7 @@ using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance;
+    //public static GameManager Instance;
 
     [Header("Timer Settings")]
     public float timeLimit = 60f; // Time limit in seconds
@@ -107,20 +107,10 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        // Singleton pattern
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
-
+        
+        int level = PlayerPrefs.GetInt("Level",1);
         // Initialize
-        currentTime = timeLimit;
+        currentTime = timeLimit+level*2.5f;
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         UpdateTimerDisplay();
     }
