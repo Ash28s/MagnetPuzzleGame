@@ -35,7 +35,7 @@ public class MainMenu : MonoBehaviour
      public void StartGame()
     {
         clickSound.Play();
-        SceneManager.LoadScene("SampleScene"); // Replace with your game scene name
+        SceneManager.LoadScene("Level_1"); // Replace with your game scene name
     }
 
     // Open settings panel

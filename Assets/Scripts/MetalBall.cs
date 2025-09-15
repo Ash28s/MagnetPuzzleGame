@@ -10,13 +10,14 @@ public class MetalBall : MonoBehaviour
     [Header("Collision Detection")]
     public string obstacleTag = "Obstacle";    // Tag for obstacle objects
     
+    private GameManager gameManager;
     private Rigidbody2D rb;
     private Vector2 startPos;
     
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        
+        gameManager = GameObject.FindObjectOfType<GameManager>();
         // Optimized physics settings for smooth magnet interaction
         rb.gravityScale = 0f;      // Pure magnet physics
         rb.mass = 1f;
@@ -85,17 +86,10 @@ public class MetalBall : MonoBehaviour
         rb.velocity = Vector2.zero;
         rb.angularVelocity = 0f;
         
-        // Check if GameManager instance exists
-        if (GameManager.Instance == null)
-        {
-            Debug.LogError("GameManager.Instance is null!");
-            return;
-        }
-        
         Debug.Log("Calling GameManager.TriggerGameOver...");
         
         // Call the public TriggerGameOver method
-        GameManager.Instance.TriggerGameOver("Ball Hit Obstacle!");
+        gameManager.TriggerGameOver("Ball Hit Obstacle!");
     }
     
     public void ApplyForce(Vector2 force)
