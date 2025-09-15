@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine.EventSystems; // to ignore UI touches
 
 public class TouchMagnetInput : MonoBehaviour
 {
@@ -17,13 +16,7 @@ public class TouchMagnetInput : MonoBehaviour
 
     Camera cam;
     public GameManager gameManager;
-<<<<<<< HEAD
-
-    [SerializeField] MagnetSwitcher magnetSwitcher;
-
-=======
     // Tracking taps
->>>>>>> vishal
     class TapInfo
     {
         public int fingerId;
@@ -38,6 +31,7 @@ public class TouchMagnetInput : MonoBehaviour
     float lastMouseClickTime = -1f;
     int mouseClickCount = 0;
 
+    // For double-tap removal tracking
     private static float lastTapTime = -1f;
     private static Magnet lastTappedMagnet = null;
 
@@ -45,28 +39,33 @@ public class TouchMagnetInput : MonoBehaviour
     {
         cam = Camera.main;
         if (bootstrap == null) bootstrap = FindObjectOfType<LevelBootstrap>();
-        if (magnetSwitcher == null) magnetSwitcher = FindObjectOfType<MagnetSwitcher>();
     }
 
     void Update()
     {
 #if UNITY_EDITOR
-        HandleMouseFallback();
+        HandleMouseFallback();   // so you can still test in editor
 #endif
         HandleTouches();
     }
 
+    // ---------------- TOUCH HANDLING ----------------
     void HandleTouches()
     {
         if (Input.touchCount == 0)
         {
+            // Clean up ended touches
             var toRemove = new List<int>();
             foreach (var kvp in activeTouches)
             {
                 bool stillActive = false;
                 for (int i = 0; i < Input.touchCount; i++)
                 {
-                    if (Input.GetTouch(i).fingerId == kvp.Key) { stillActive = true; break; }
+                    if (Input.GetTouch(i).fingerId == kvp.Key)
+                    {
+                        stillActive = true;
+                        break;
+                    }
                 }
                 if (!stillActive) toRemove.Add(kvp.Key);
             }
@@ -74,14 +73,10 @@ public class TouchMagnetInput : MonoBehaviour
             return;
         }
 
+        // Process all active touches
         for (int i = 0; i < Input.touchCount; i++)
         {
             Touch t = Input.GetTouch(i);
-
-            // Ignore UI touches
-            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(t.fingerId))
-                continue;
-
             switch (t.phase)
             {
                 case TouchPhase.Began:
@@ -109,22 +104,18 @@ public class TouchMagnetInput : MonoBehaviour
             downTime = Time.time
         };
 
-        // If finger starts on a magnet, set it active for the switcher
+        // Check if starting on a magnet
         info.pressedMagnet = MagnetUnderScreenPoint(t.position);
-        if (info.pressedMagnet != null)
-            magnetSwitcher?.SetActiveMagnet(info.pressedMagnet);
-
         activeTouches[t.fingerId] = info;
 
-        // Two-finger: spawn opposite of current mode at average position
+        // Two finger simultaneous tap = spawn repel magnet at average position
         if (Input.touchCount == 2)
         {
             Touch other = GetOtherTouch(t.fingerId);
             if (other.phase == TouchPhase.Began || (Time.time - GetTouchInfo(other.fingerId)?.downTime) < 0.1f)
             {
                 Vector2 avgScreen = 0.5f * (t.position + other.position);
-                bool currentModeAttract = magnetSwitcher != null ? magnetSwitcher.GetCurrentMode() : MagnetSwitcher.IsAttractMode;
-                SpawnMagnetAtScreen(avgScreen, attract: !currentModeAttract);
+                SpawnMagnetAtScreen(avgScreen, attract: false);
             }
         }
     }
@@ -140,35 +131,31 @@ public class TouchMagnetInput : MonoBehaviour
             {
                 info.longPressTriggered = true;
                 info.pressedMagnet.Toggle();
-
-                // Sync switcher with this magnet
-                magnetSwitcher?.SetActiveMagnet(info.pressedMagnet);
             }
         }
     }
 
     void OnTouchEnded(Touch t)
     {
-        if (!activeTouches.TryGetValue(t.fingerId, out var info)) return;
+        if (!activeTouches.TryGetValue(t.fingerId, out var info))
+            return;
 
         float duration = Time.time - info.downTime;
 
+        // If this was a short tap (no long press triggered)
         if (!info.longPressTriggered && duration < longPressThreshold)
         {
+            // Handle double tap removal
             if (info.pressedMagnet != null)
             {
                 HandleDoubleTapRemoval(info.pressedMagnet);
             }
             else
             {
-                // Single tap on empty space = spawn using current mode
+                // Single finger tap on empty space = attract magnet
                 if (Input.touchCount == 1)
                 {
-                    bool currentModeAttract = magnetSwitcher != null ? magnetSwitcher.GetCurrentMode() : MagnetSwitcher.IsAttractMode;
-                    var spawned = SpawnMagnetAtScreen(info.position, attract: currentModeAttract);
-
-                    // Make the new magnet the active one for button control
-                    if (spawned != null) magnetSwitcher?.SetActiveMagnet(spawned);
+                    SpawnMagnetAtScreen(info.position, attract: true);
                 }
             }
         }
@@ -182,12 +169,14 @@ public class TouchMagnetInput : MonoBehaviour
 
         if (lastTappedMagnet == magnet && Time.time - lastTapTime <= doubleTapMaxGap)
         {
+            // Double tap detected - remove magnet
             Destroy(magnet.gameObject);
             lastTappedMagnet = null;
             lastTapTime = -1f;
         }
         else
         {
+            // First tap - remember it
             lastTappedMagnet = magnet;
             lastTapTime = Time.time;
         }
@@ -209,18 +198,18 @@ public class TouchMagnetInput : MonoBehaviour
         return default;
     }
 
-    // Spawn and return the created magnet
-    Magnet SpawnMagnetAtScreen(Vector2 screenPos, bool attract)
+    // ---------------- SPAWNING ----------------
+    void SpawnMagnetAtScreen(Vector2 screenPos, bool attract)
     {
         if (gameManager != null && !gameManager.CanSpawnMagnet())
         {
             Debug.Log("Maximum magnets reached!");
-            return null;
+            return;
         }
         if (magnetPrefab == null)
         {
             Debug.LogWarning("Magnet prefab not assigned!");
-            return null;
+            return;
         }
 
         Vector3 world = cam.ScreenToWorldPoint(screenPos);
@@ -229,22 +218,35 @@ public class TouchMagnetInput : MonoBehaviour
         if (bootstrap != null)
             world = bootstrap.ClampInside(world, spawnClampMargin);
 
+        // Instantiate the magnet
         var m = Instantiate(magnetPrefab, world, Quaternion.identity);
 
+        // Set the attract property FIRST
         m.isAttract = attract;
 
+        // Force visual update
         var sr = m.GetComponent<SpriteRenderer>();
-        if (sr != null) sr.color = attract ? Color.blue : Color.red;
+        if (sr != null)
+        {
+            sr.color = attract ? Color.blue : Color.red;
+        }
 
+        // Update the sprite if using SpriteCreator
         if (sr != null && sr.sprite == null)
+        {
             sr.sprite = SpriteCreator.CreateSquareSprite(attract ? Color.blue : Color.red);
+        }
 
-        m.SendMessage("UpdateVisuals", SendMessageOptions.DontRequireReceiver);
+        // Call magnet's update method if it exists
+        if (m.GetComponent<Magnet>() != null)
+        {
+            // Force the magnet to refresh its visuals
+            m.SendMessage("UpdateVisuals", SendMessageOptions.DontRequireReceiver);
+        }
 
         m.name = attract ? "Magnet_Attract" : "Magnet_Repel";
-        Debug.Log($"Spawned {(attract ? "ATTRACT" : "REPEL")} magnet at {world}");
 
-        return m;
+        Debug.Log($"Spawned {(attract ? "ATTRACT" : "REPEL")} magnet at {world}");
     }
 
     Magnet MagnetUnderScreenPoint(Vector2 screenPos)
@@ -258,23 +260,20 @@ public class TouchMagnetInput : MonoBehaviour
         return null;
     }
 
-#if UNITY_EDITOR
+    // ---------------- MOUSE FALLBACK (EDITOR) ----------------
     void HandleMouseFallback()
     {
+        // Don't handle mouse if we have active touches
         if (Input.touchCount > 0) return;
 
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-            return;
-
-        // Left click
+        // Left click = attract magnet (BLUE)
         if (Input.GetMouseButtonDown(0))
         {
+            // Check if clicking on existing magnet for double-click removal
             var magnet = MagnetUnderScreenPoint(Input.mousePosition);
             if (magnet != null)
             {
-                // Select clicked magnet for button control
-                magnetSwitcher?.SetActiveMagnet(magnet);
-
+                // Handle double click removal
                 float timeSinceLastClick = Time.time - lastMouseClickTime;
                 if (timeSinceLastClick <= doubleTapMaxGap)
                 {
@@ -294,32 +293,48 @@ public class TouchMagnetInput : MonoBehaviour
             }
             else
             {
-                bool mode = magnetSwitcher != null ? magnetSwitcher.GetCurrentMode() : MagnetSwitcher.IsAttractMode;
-                var spawned = SpawnMagnetAtScreen(Input.mousePosition, mode);
-                if (spawned != null) magnetSwitcher?.SetActiveMagnet(spawned);
+                // Spawn attract magnet
+                SpawnMagnetAtScreen(Input.mousePosition, true);
                 mouseClickCount = 0;
             }
         }
 
-        // Right click = spawn opposite mode
+        // Right click = repel magnet (RED)
         if (Input.GetMouseButtonDown(1))
         {
-            bool mode = magnetSwitcher != null ? magnetSwitcher.GetCurrentMode() : MagnetSwitcher.IsAttractMode;
-            var spawned = SpawnMagnetAtScreen(Input.mousePosition, !mode);
-            if (spawned != null) magnetSwitcher?.SetActiveMagnet(spawned);
+            SpawnMagnetAtScreen(Input.mousePosition, false);
         }
 
-        // Middle click = toggle magnet under cursor (also sync switcher)
+        // Middle click = toggle magnet under cursor
         if (Input.GetMouseButtonDown(2))
         {
             var magnet = MagnetUnderScreenPoint(Input.mousePosition);
             if (magnet != null)
             {
                 magnet.Toggle();
-                magnetSwitcher?.SetActiveMagnet(magnet);
                 Debug.Log($"Toggled magnet to {(magnet.isAttract ? "ATTRACT" : "REPEL")}");
             }
         }
+
+        // Keyboard shortcuts for testing
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            SpawnMagnetAtScreen(Input.mousePosition, true);
+            Debug.Log("Spawned ATTRACT magnet via 'A' key");
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SpawnMagnetAtScreen(Input.mousePosition, false);
+            Debug.Log("Spawned REPEL magnet via 'R' key");
+        }
+
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            var magnets = FindObjectsOfType<Magnet>();
+            foreach (var mag in magnets)
+                Destroy(mag.gameObject);
+            Debug.Log($"Cleared {magnets.Length} magnets");
+        }
     }
-#endif
 }
