@@ -39,41 +39,41 @@ public class InstructionsUI : MonoBehaviour
     {
         if (instructionsText == null) return;
         
-        instructionsText.text = @"<size=24><b>🧲 MAGNET PUZZLE GAME</b></size>
+        instructionsText.text = @"<size=18><b> MAGNET PUZZLE GAME</b></size>
 
-<size=18><b>🎯 OBJECTIVE:</b></size>
+<size=14><b>OBJECTIVE:</b></size>
 Guide the metal ball to the goal without hitting obstacles!
 
-<size=18><b>📱 TOUCH CONTROLS:</b></size>
+<size=14><b> TOUCH CONTROLS:</b></size>
 
-<b>🔵 ATTRACT MAGNET (Blue):</b>
+<b> ATTRACT MAGNET (Blue):</b>
 • <b>Single tap</b> on empty space
 • Pulls the ball towards it
 
-<b>🔴 REPEL MAGNET (Red):</b>
+<b> REPEL MAGNET (Red):</b>
 • <b>Two finger tap</b> simultaneously
 • Pushes the ball away
 
-<b>🔄 TOGGLE MAGNET:</b>
+<b> TOGGLE MAGNET:</b>
 • <b>Long press</b> any magnet
 • Changes blue ↔ red
 
-<b>🗑️ REMOVE MAGNET:</b>
+<b> REMOVE MAGNET:</b>
 • <b>Double tap</b> any magnet
 • Deletes the magnet
 
-<size=18><b>⚠️ GAME RULES:</b></size>
+<size=14><b> GAME RULES:</b></size>
 • Maximum <b>5 magnets</b> at once
 • Don't let ball hit <b>obstacles</b>
 • Beat the timer!
 
-<size=18><b>💡 TIPS:</b></size>
+<size=14><b> TIPS:</b></size>
 • Use attract magnets to pull ball around corners
 • Use repel magnets to push ball away from danger
 • Combine both types for precise control
 • Plan your magnet placement carefully!
 
-<size=16><i>Good luck! 🍀</i></size>";
+<size=14><i>Good luck!</i></size>";
     }
     
     public void ShowInstructions()
