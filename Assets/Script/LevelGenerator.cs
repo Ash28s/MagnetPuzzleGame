@@ -12,7 +12,6 @@ public class LevelGenerator : MonoBehaviour
     public GameObject endPrefab;
     public GameObject obstaclePrefab;
     public GameObject trapPrefab;
-    public int randomSeed = 1;
     public float cellSize = 1f; // Size of each grid cell in world units
 
     private char[,] grid;
@@ -21,8 +20,8 @@ public class LevelGenerator : MonoBehaviour
 
     void Start()
     {
-        Random.InitState(randomSeed);
         level = PlayerPrefs.GetInt("Level",1);
+        Random.InitState(level);
         GenerateLevel();
     }
 
