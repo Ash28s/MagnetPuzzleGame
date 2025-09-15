@@ -17,9 +17,13 @@ public class TouchMagnetInput : MonoBehaviour
 
     Camera cam;
     public GameManager gameManager;
+<<<<<<< HEAD
 
     [SerializeField] MagnetSwitcher magnetSwitcher;
 
+=======
+    // Tracking taps
+>>>>>>> vishal
     class TapInfo
     {
         public int fingerId;
