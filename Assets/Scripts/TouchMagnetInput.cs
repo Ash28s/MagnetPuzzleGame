@@ -137,9 +137,10 @@ public class TouchMagnetInput : MonoBehaviour
             return;
 
         float duration = Time.time - info.downTime;
-
+        Debug.Log("Touch End");
         if (!info.longPressTriggered && duration < longPressThreshold)
         {
+            Debug.Log("Trigger tap");
             if (info.pressedMagnet != null)
             {
                 HandleDoubleTapRemoval(info.pressedMagnet);
@@ -155,21 +156,22 @@ public class TouchMagnetInput : MonoBehaviour
 
     // ---------------- SPAWN LOGIC ----------------
     void TrySpawnFromPending(Vector2 screenPos)
-    {
+    {       
         // Check pending spawn selection
         var pending = MagnetSpawnSelector.PendingSpawn;
         if (pending == MagnetSpawnSelector.PendingSpawnType.None)
         {
+            Debug.Log("nothing "+pending);
             // Nothing selected: do not spawn
             return;
         }
 
         bool attract = (pending == MagnetSpawnSelector.PendingSpawnType.Attract);
-
+        Debug.Log("Spawn Magnet");
         SpawnMagnetAtScreen(screenPos, attract);
-
+        Debug.Log(pending == MagnetSpawnSelector.PendingSpawnType.None);
         // Consume the selection (one-shot)
-        MagnetSpawnSelector.Consume();
+        //MagnetSpawnSelector.Consume();
     }
 
     void HandleDoubleTapRemoval(Magnet magnet)
