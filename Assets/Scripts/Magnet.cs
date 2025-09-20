@@ -6,7 +6,8 @@ public class Magnet : MonoBehaviour
     public bool isAttract = true;
     public float strength = 25f;
     public float range = 5f;
-    
+    public bool isTrapMagnet = false;
+
     [Header("Physics Tuning")]
     public float magnetRadius = 0.4f;      // Physical size of magnet
     public float maxForce = 15f;
@@ -74,7 +75,8 @@ public class Magnet : MonoBehaviour
         
         float distance = Vector2.Distance(transform.position, ball.transform.position);
         float surfaceDistance = magnetRadius + ballRadius;
-        
+        if(isTrapMagnet==false)
+        {
         // Check if ball should be "stuck" (for attract magnets only)
         if (isAttract && distance <= surfaceDistance + deadZoneRadius)
         {
@@ -105,6 +107,12 @@ public class Magnet : MonoBehaviour
         
         Vector2 force = CalculateMagneticForce();
         ApplySmoothForce(force);
+        }
+        else
+        {
+            TrapMagnet();
+        }
+
         UpdateVisualFeedback();
     }
     
@@ -183,6 +191,7 @@ public class Magnet : MonoBehaviour
         if (sr != null)
         {
             Color baseColor = isAttract ? Color.blue : Color.red;
+            baseColor = isTrapMagnet? Color.yellow:baseColor;
             if (ballIsStuck) baseColor = Color.Lerp(baseColor, Color.white, 0.3f); // Lighter when stuck
             sr.color = baseColor;
         }
@@ -201,13 +210,17 @@ public class Magnet : MonoBehaviour
             float pulse = 1f + (Mathf.Sin(Time.time * pulseSpeed) * 0.2f * pulseIntensity);
             
             Color currentColor = isAttract ? Color.blue : Color.red;
+            currentColor = isTrapMagnet? Color.yellow:currentColor;
             if (ballIsStuck) currentColor = Color.Lerp(currentColor, Color.white, 0.4f);
             currentColor *= pulse;
             sr.color = currentColor;
         }
         else
         {
-            sr.color = isAttract ? Color.blue : Color.red;
+            if(isTrapMagnet==false)
+                sr.color = isAttract ? Color.blue : Color.red;
+            else
+                sr.color = Color.yellow;    
         }
     }
     
@@ -229,6 +242,24 @@ public class Magnet : MonoBehaviour
         {
             Gizmos.color = ballIsStuck ? Color.green : Color.red;
             Gizmos.DrawRay(transform.position, lastForce.normalized * 2f);
+        }
+    }
+
+    void TrapMagnet()
+    {
+         Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, range);
+        foreach (Collider2D col in colliders)
+        {
+           
+            if (col != null && col.tag=="Obstacle")
+            {
+                Rigidbody2D rb = col.attachedRigidbody;
+                if (rb != null)
+                {
+                    Vector3 direction = (transform.position - col.transform.position).normalized;
+                    rb.AddForce(direction * strength);
+                }
+            }
         }
     }
 }

@@ -211,13 +211,21 @@ public class TouchMagnetInput : MonoBehaviour
         if (bootstrap != null)
             world = bootstrap.ClampInside(world, spawnClampMargin);
 
+        var pending = MagnetSpawnSelector.PendingSpawn;
         var m = Instantiate(magnetPrefab, world, Quaternion.identity);
         m.isAttract = attract;
-
+        if(pending == MagnetSpawnSelector.PendingSpawnType.Trap)
+        {
+            m.isTrapMagnet = true;
+        }
         var sr = m.GetComponent<SpriteRenderer>();
         if (sr != null)
         {
             sr.color = attract ? Color.blue : Color.red;
+            if (pending == MagnetSpawnSelector.PendingSpawnType.Trap)
+            {
+            sr.color = Color.yellow;
+            }
             if (sr.sprite == null)
             {
                 sr.sprite = SpriteCreator.CreateSquareSprite(attract ? Color.blue : Color.red);
@@ -226,6 +234,12 @@ public class TouchMagnetInput : MonoBehaviour
 
         m.SendMessage("UpdateVisuals", SendMessageOptions.DontRequireReceiver);
         m.name = attract ? "Magnet_Attract" : "Magnet_Repel";
+        
+        if (pending == MagnetSpawnSelector.PendingSpawnType.Trap)
+        {
+            sr.color = Color.yellow;
+            m.name = "Trap_Magnet";
+        }
         Debug.Log($"Spawned {(attract ? "Attract" : "Repel")} magnet @ {world}");
         return m;
     }
