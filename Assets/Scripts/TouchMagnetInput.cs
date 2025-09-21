@@ -143,7 +143,7 @@ public class TouchMagnetInput : MonoBehaviour
             Debug.Log("Trigger tap");
             if (info.pressedMagnet != null)
             {
-                HandleDoubleTapRemoval(info.pressedMagnet);
+                //HandleDoubleTapRemoval(info.pressedMagnet); // Disabled double tap removal for magnets.
             }
             else
             {
