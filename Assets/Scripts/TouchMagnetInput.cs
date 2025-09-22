@@ -144,6 +144,9 @@ public class TouchMagnetInput : MonoBehaviour
             if (info.pressedMagnet != null)
             {
                 //HandleDoubleTapRemoval(info.pressedMagnet); // Disabled double tap removal for magnets.
+                // Single-tap removal
+                Destroy(info.pressedMagnet.gameObject);
+                Debug.Log("Magnet removed by single tap.");
             }
             else
             {
@@ -259,30 +262,34 @@ public class TouchMagnetInput : MonoBehaviour
         if (Input.touchCount > 0) return;
 
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-            return;
+            return;  
 
         if (Input.GetMouseButtonDown(0))
         {
             var magnet = MagnetUnderScreenPoint(Input.mousePosition);
             if (magnet != null)
             {
-                // Double click removal
-                float timeSinceLastClick = Time.time - lastMouseClickTime;
-                if (timeSinceLastClick <= doubleTapMaxGap)
-                {
-                    mouseClickCount++;
-                    if (mouseClickCount >= 2)
-                    {
-                        Destroy(magnet.gameObject);
-                        mouseClickCount = 0;
-                        Debug.Log("Removed magnet via mouse double-click");
-                    }
-                }
-                else
-                {
-                    mouseClickCount = 1;
-                }
-                lastMouseClickTime = Time.time;
+                // // Double click removal
+                // float timeSinceLastClick = Time.time - lastMouseClickTime;
+                // if (timeSinceLastClick <= doubleTapMaxGap)
+                // {
+                //     mouseClickCount++;
+                //     if (mouseClickCount >= 2)
+                //     {
+                //         Destroy(magnet.gameObject);
+                //         mouseClickCount = 0;
+                //         Debug.Log("Removed magnet via mouse double-click");
+                //     }
+                // }
+                // else
+                // {
+                //     mouseClickCount = 1;
+                // }
+                // lastMouseClickTime = Time.time;
+
+                // Single-click removal in Editor
+                Destroy(magnet.gameObject);
+                Debug.Log("Removed magnet via mouse single-click (Editor).");
             }
             else
             {
