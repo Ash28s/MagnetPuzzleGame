@@ -102,17 +102,19 @@ public class GameManager : MonoBehaviour
 
     [Header("Magnet Limit")]
     public int maxMagnets = 5; // Maximum number of magnets allowed
-
+    public TextMeshProUGUI magnetText;
     private bool isGameOver = false;
-
+    private int currentMag = 0;
     void Awake()
     {
         
         int level = PlayerPrefs.GetInt("Level",1);
         // Initialize
         currentTime = timeLimit+level*2.5f;
+        maxMagnets += (int)(maxMagnets*level*0.1f); 
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         UpdateTimerDisplay();
+        magnetText.text = (maxMagnets).ToString();
     }
 
     void Update()
@@ -126,6 +128,7 @@ public class GameManager : MonoBehaviour
             {
                 TriggerGameOver("Time's Up!");
             }
+            magnetText.text = maxMagnets.ToString();
         }
     }
 
@@ -160,6 +163,11 @@ public class GameManager : MonoBehaviour
     public bool CanSpawnMagnet()
     {
         Magnet[] magnets = FindObjectsOfType<Magnet>();
-        return magnets.Length < maxMagnets;
+        return maxMagnets>0;
+    }
+
+    public void MagnetSpawned()
+    {
+        maxMagnets--;
     }
 }

@@ -247,17 +247,18 @@ public class Magnet : MonoBehaviour
 
     void TrapMagnet()
     {
-         Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, range);
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, range/2f);
         foreach (Collider2D col in colliders)
         {
            
-            if (col != null && col.tag=="Obstacle")
+            if (col != null && (col.tag=="Obstacle"|| col.tag=="Block"))
             {
                 Rigidbody2D rb = col.attachedRigidbody;
                 if (rb != null)
                 {
+                    rb.isKinematic = false;
                     Vector3 direction = (transform.position - col.transform.position).normalized;
-                    rb.AddForce(direction * strength);
+                    rb.AddForce(direction * strength*0.5f);
                 }
             }
         }

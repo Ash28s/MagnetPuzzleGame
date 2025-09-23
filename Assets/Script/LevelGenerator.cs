@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 using System.Linq;
 public class LevelGenerator : MonoBehaviour
 {
@@ -13,7 +14,7 @@ public class LevelGenerator : MonoBehaviour
     public GameObject obstaclePrefab;
     public GameObject trapPrefab;
     public float cellSize = 1f; // Size of each grid cell in world units
-
+    public TextMeshProUGUI levelTxt; 
     private char[,] grid;
     private List<GameObject> gridObjects = new List<GameObject>();
     private int level = 1;
@@ -22,6 +23,7 @@ public class LevelGenerator : MonoBehaviour
     {
         level = PlayerPrefs.GetInt("Level",1);
         Random.InitState(level);
+        levelTxt.text = "Lv "+level.ToString();
         GenerateLevel();
     }
 
