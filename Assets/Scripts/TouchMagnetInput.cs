@@ -244,6 +244,7 @@ public class TouchMagnetInput : MonoBehaviour
             m.name = "Trap_Magnet";
         }
         Debug.Log($"Spawned {(attract ? "Attract" : "Repel")} magnet @ {world}");
+        gameManager.MagnetSpawned();
         return m;
     }
 
