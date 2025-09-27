@@ -1685,6 +1685,7 @@ GameObject:
   - component: {fileID: 473332595}
   - component: {fileID: 473332597}
   - component: {fileID: 473332596}
+  - component: {fileID: 473332598}
   m_Layer: 5
   m_Name: WonPanel
   m_TagString: WonPanel
@@ -1753,6 +1754,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 473332594}
   m_CullTransparentMesh: 1
+--- !u!95 &473332598
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 473332594}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 9f0809d4f6104cf99a1ef41fea80aa38, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &491534195
 GameObject:
   m_ObjectHideFlags: 0
@@ -2322,15 +2344,15 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 6747340278900548899, guid: bf50608065920f82fb9df6119817e9ef, type: 2}
-  m_audioClip: {fileID: 8300000, guid: 419e97be1ac95b5ed87337ec34e47c9b, type: 3}
+  m_audioClip: {fileID: 8300000, guid: ea6e0092210c634fdb9fd2847a7e65bb, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.8
   m_Pitch: 1
   Loop: 1
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 128
+  Priority: 200
   DopplerLevel: 1
   MinDistance: 1
   MaxDistance: 500
@@ -4594,6 +4616,7 @@ GameObject:
   - component: {fileID: 1389734834}
   - component: {fileID: 1389734836}
   - component: {fileID: 1389734835}
+  - component: {fileID: 1389734837}
   m_Layer: 5
   m_Name: GameOver
   m_TagString: Untagged
@@ -4662,6 +4685,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1389734833}
   m_CullTransparentMesh: 1
+--- !u!95 &1389734837
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1389734833}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 9f0809d4f6104cf99a1ef41fea80aa38, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1436350469
 GameObject:
   m_ObjectHideFlags: 0
@@ -7162,7 +7206,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 11
+  m_text: 0
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: c01465f6c8dceb342825e612e354a29e, type: 2}
   m_sharedMaterial: {fileID: -4098196835388176548, guid: c01465f6c8dceb342825e612e354a29e, type: 2}

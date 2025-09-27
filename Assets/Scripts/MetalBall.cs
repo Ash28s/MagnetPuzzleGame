@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using System.Collections;
 [RequireComponent(typeof(Rigidbody2D), typeof(CircleCollider2D))]
 public class MetalBall : MonoBehaviour
 {
@@ -10,6 +10,8 @@ public class MetalBall : MonoBehaviour
     [Header("Collision Detection")]
     public string obstacleTag = "Obstacle";    // Tag for obstacle objects
     
+    public ParticleSystem hitEffect;
+    public AudioSource hitSound;
     private GameManager gameManager;
     private Rigidbody2D rb;
     private Vector2 startPos;
@@ -60,10 +62,14 @@ public class MetalBall : MonoBehaviour
     void OnCollisionEnter2D(Collision2D collision)
     {
         // Check if ball hit an obstacle
+        hitSound.Play();
+        Debug.Log(collision.contacts[0].point);
+        ParticleSystem particle = Instantiate(hitEffect,collision.contacts[0].point,Quaternion.identity);
+        particle.Play();
         if (collision.gameObject.CompareTag(obstacleTag))
         {
             Debug.Log("Ball hit obstacle: " + collision.gameObject.name);
-            HandleObstacleHit();
+            StartCoroutine(HandleObstacleHit());
         }
     }
     
@@ -74,12 +80,13 @@ public class MetalBall : MonoBehaviour
         if (other.CompareTag(obstacleTag))
         {
             Debug.Log("Ball entered obstacle trigger: " + other.gameObject.name);
-            HandleObstacleHit();
+            StartCoroutine(HandleObstacleHit());
         }
     }
     
-    void HandleObstacleHit()
+    IEnumerator HandleObstacleHit()
     {
+        yield return new WaitForSeconds(0.5f);
         Debug.Log("HandleObstacleHit called!");
         
         // Stop the ball immediately
