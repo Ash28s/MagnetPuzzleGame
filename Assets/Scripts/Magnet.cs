@@ -191,7 +191,18 @@ public class Magnet : MonoBehaviour
         if (sr != null)
         {
             Color baseColor = isAttract ? Color.blue : Color.red;
-            baseColor = isTrapMagnet? Color.yellow:baseColor;
+            if (isTrapMagnet)
+            {
+            baseColor = Color.yellow;
+            }
+            else if (isAttract)
+            {
+            baseColor = Color.blue;
+            }
+            else
+            {
+            baseColor = Color.red;
+            }
             if (ballIsStuck) baseColor = Color.Lerp(baseColor, Color.white, 0.3f); // Lighter when stuck
             sr.color = baseColor;
         }
@@ -210,17 +221,38 @@ public class Magnet : MonoBehaviour
             float pulse = 1f + (Mathf.Sin(Time.time * pulseSpeed) * 0.2f * pulseIntensity);
             
             Color currentColor = isAttract ? Color.blue : Color.red;
-            currentColor = isTrapMagnet? Color.yellow:currentColor;
+            
+            if (isTrapMagnet)
+            {
+            currentColor = Color.yellow;
+            }
+            else if (isAttract)
+            {
+            currentColor = Color.blue;
+            }
+            else 
+            {
+            currentColor = Color.red;
+            } 
             if (ballIsStuck) currentColor = Color.Lerp(currentColor, Color.white, 0.4f);
             currentColor *= pulse;
             sr.color = currentColor;
         }
         else
         {
-            if(isTrapMagnet==false)
-                sr.color = isAttract ? Color.blue : Color.red;
+            
+            if (isTrapMagnet)
+            {
+            sr.color = Color.yellow;
+            }
+            else if (isAttract)
+            {
+            sr.color = Color.blue;
+            }
             else
-                sr.color = Color.yellow;    
+            {
+            sr.color = Color.red;
+            } 
         }
     }
     

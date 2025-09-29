@@ -101,20 +101,27 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI gameOverText; // Assign in Inspector: GameOver text
 
     [Header("Magnet Limit")]
-    public int maxMagnets = 5; // Maximum number of magnets allowed
+    public int maxAttractMagnets = 5; // Maximum number of magnets allowed
+    public int maxRepelMagnets = 3; 
+    public int maxTrapMagnets = 1; 
     public TextMeshProUGUI magnetText;
+    public TextMeshProUGUI magnetRepelText;
+    public TextMeshProUGUI magnetTrapText;
     private bool isGameOver = false;
-    private int currentMag = 0;
     void Awake()
     {
         
         int level = PlayerPrefs.GetInt("Level",1);
         // Initialize
         currentTime = timeLimit+level*2.5f;
-        maxMagnets += (int)(maxMagnets*level*0.1f); 
+        maxAttractMagnets += (int)(maxAttractMagnets*level*0.1f); 
+        maxRepelMagnets += (int)(maxRepelMagnets*level*0.1f); 
+        maxTrapMagnets+=(int)(maxTrapMagnets*level*0.1f);
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         UpdateTimerDisplay();
-        magnetText.text = (maxMagnets).ToString();
+        magnetText.text = (maxAttractMagnets).ToString();
+        magnetRepelText.text = (maxRepelMagnets).ToString();
+        magnetTrapText.text = (maxTrapMagnets).ToString();
     }
 
     void Update()
@@ -128,7 +135,9 @@ public class GameManager : MonoBehaviour
             {
                 TriggerGameOver("Time's Up!");
             }
-            magnetText.text = maxMagnets.ToString();
+            magnetText.text = maxAttractMagnets.ToString();
+            magnetRepelText.text = (maxRepelMagnets).ToString();
+            magnetTrapText.text = (maxTrapMagnets).ToString();
         }
     }
 
@@ -163,11 +172,34 @@ public class GameManager : MonoBehaviour
     public bool CanSpawnMagnet()
     {
         Magnet[] magnets = FindObjectsOfType<Magnet>();
-        return maxMagnets>0;
+        var pending = MagnetSpawnSelector.PendingSpawn;
+        if (pending == MagnetSpawnSelector.PendingSpawnType.Trap)
+            {
+            return maxTrapMagnets>0;
+            }
+            else if (pending == MagnetSpawnSelector.PendingSpawnType.Attract)
+            {
+            return maxAttractMagnets>0;
+            }
+            else if(pending == MagnetSpawnSelector.PendingSpawnType.Repel)
+            {
+            return maxRepelMagnets>0;
+            }
+        return false;
     }
 
     public void MagnetSpawned()
     {
-        maxMagnets--;
+        maxAttractMagnets--;
+    }
+    
+    public void RepelMagnetSpawned()
+    {
+        maxRepelMagnets--;
+    }
+
+    public void TrapMagnetSpawned()
+    {
+        maxTrapMagnets--;
     }
 }

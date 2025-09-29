@@ -224,11 +224,19 @@ public class TouchMagnetInput : MonoBehaviour
         var sr = m.GetComponent<SpriteRenderer>();
         if (sr != null)
         {
-            sr.color = attract ? Color.blue : Color.red;
             if (pending == MagnetSpawnSelector.PendingSpawnType.Trap)
             {
             sr.color = Color.yellow;
             }
+            else if (pending == MagnetSpawnSelector.PendingSpawnType.Attract)
+            {
+            sr.color = Color.blue;
+            }
+            else if(pending == MagnetSpawnSelector.PendingSpawnType.Repel)
+            {
+            sr.color = Color.red;
+            }
+
             if (sr.sprite == null)
             {
                 sr.sprite = SpriteCreator.CreateSquareSprite(attract ? Color.blue : Color.red);
@@ -245,6 +253,19 @@ public class TouchMagnetInput : MonoBehaviour
         }
         Debug.Log($"Spawned {(attract ? "Attract" : "Repel")} magnet @ {world}");
         gameManager.MagnetSpawned();
+        if (pending == MagnetSpawnSelector.PendingSpawnType.Trap)
+        {
+            gameManager.TrapMagnetSpawned();
+        }
+        else if (pending == MagnetSpawnSelector.PendingSpawnType.Attract)
+        {
+            gameManager.MagnetSpawned();
+        }
+        else if(pending == MagnetSpawnSelector.PendingSpawnType.Repel)
+        {
+           gameManager.RepelMagnetSpawned();
+        }
+
         return m;
     }
 
