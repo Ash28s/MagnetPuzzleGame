@@ -221,6 +221,10 @@ public class TouchMagnetInput : MonoBehaviour
         {
             m.isTrapMagnet = true;
         }
+        else if(pending == MagnetSpawnSelector.PendingSpawnType.Parabolic)
+        {
+            m.isParabolic = true;
+        }
         var sr = m.GetComponent<SpriteRenderer>();
         if (sr != null)
         {
@@ -236,7 +240,11 @@ public class TouchMagnetInput : MonoBehaviour
             {
             sr.color = Color.red;
             }
-
+            else if (pending == MagnetSpawnSelector.PendingSpawnType.Parabolic)
+            {
+            sr.color = new Color(1f, 0.0f, 0.617527f, 0.95f);
+            }
+            
             if (sr.sprite == null)
             {
                 sr.sprite = SpriteCreator.CreateSquareSprite(attract ? Color.blue : Color.red);
@@ -251,7 +259,12 @@ public class TouchMagnetInput : MonoBehaviour
             sr.color = Color.yellow;
             m.name = "Trap_Magnet";
         }
-        Debug.Log($"Spawned {(attract ? "Attract" : "Repel")} magnet @ {world}");
+        else if (pending == MagnetSpawnSelector.PendingSpawnType.Parabolic)
+        {
+            sr.color = new Color(1f, 0.0f, 0.617527f, 0.95f);
+            m.name = "Parabolic_Magnet";
+        }
+        Debug.Log($"Spawned {(MagnetSpawnSelector.PendingSpawn)} magnet @ {world}");
         gameManager.MagnetSpawned();
         if (pending == MagnetSpawnSelector.PendingSpawnType.Trap)
         {
@@ -264,6 +277,10 @@ public class TouchMagnetInput : MonoBehaviour
         else if(pending == MagnetSpawnSelector.PendingSpawnType.Repel)
         {
            gameManager.RepelMagnetSpawned();
+        }
+        else if(pending == MagnetSpawnSelector.PendingSpawnType.Parabolic)
+        {
+           gameManager.ParabolicMagnetSpawned();
         }
 
         return m;

@@ -104,9 +104,11 @@ public class GameManager : MonoBehaviour
     public int maxAttractMagnets = 5; // Maximum number of magnets allowed
     public int maxRepelMagnets = 3; 
     public int maxTrapMagnets = 1; 
+    public int maxParabolicMagnets = 1; 
     public TextMeshProUGUI magnetText;
     public TextMeshProUGUI magnetRepelText;
     public TextMeshProUGUI magnetTrapText;
+    public TextMeshProUGUI magnetParabolicText;
     private bool isGameOver = false;
     void Awake()
     {
@@ -117,11 +119,13 @@ public class GameManager : MonoBehaviour
         maxAttractMagnets += (int)(maxAttractMagnets*level*0.1f); 
         maxRepelMagnets += (int)(maxRepelMagnets*level*0.1f); 
         maxTrapMagnets+=(int)(maxTrapMagnets*level*0.1f);
+        maxParabolicMagnets+=(int)(maxParabolicMagnets*level*0.1f);
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         UpdateTimerDisplay();
         magnetText.text = (maxAttractMagnets).ToString();
         magnetRepelText.text = (maxRepelMagnets).ToString();
         magnetTrapText.text = (maxTrapMagnets).ToString();
+        magnetParabolicText.text = maxParabolicMagnets.ToString();
     }
 
     void Update()
@@ -138,6 +142,7 @@ public class GameManager : MonoBehaviour
             magnetText.text = maxAttractMagnets.ToString();
             magnetRepelText.text = (maxRepelMagnets).ToString();
             magnetTrapText.text = (maxTrapMagnets).ToString();
+            magnetParabolicText.text = maxParabolicMagnets.ToString();
         }
     }
 
@@ -185,6 +190,10 @@ public class GameManager : MonoBehaviour
             {
             return maxRepelMagnets>0;
             }
+            else if(pending == MagnetSpawnSelector.PendingSpawnType.Parabolic)
+            {
+                return maxParabolicMagnets>0;
+            }
         return false;
     }
 
@@ -201,5 +210,10 @@ public class GameManager : MonoBehaviour
     public void TrapMagnetSpawned()
     {
         maxTrapMagnets--;
+    }
+
+    public void ParabolicMagnetSpawned()
+    {
+        maxParabolicMagnets--;
     }
 }

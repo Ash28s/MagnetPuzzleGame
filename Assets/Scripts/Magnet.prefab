@@ -49,6 +49,7 @@ MonoBehaviour:
   isAttract: 1
   strength: 10
   range: 5
+  isTrapMagnet: 0
   magnetRadius: 0.4
   maxForce: 15
   smoothingFactor: 0.7
