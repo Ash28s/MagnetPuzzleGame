@@ -7,6 +7,7 @@ public class Magnet : MonoBehaviour
     public float strength = 25f;
     public float range = 5f;
     public bool isTrapMagnet = false;
+    public bool isParabolic = false;
 
     [Header("Physics Tuning")]
     public float magnetRadius = 0.4f;      // Physical size of magnet
@@ -65,7 +66,7 @@ public class Magnet : MonoBehaviour
             var ballCollider = ball.GetComponent<CircleCollider2D>();
             if (ballCollider != null) ballRadius = ballCollider.radius;
         }
-        
+      
         UpdateVisuals();
     }
     
@@ -75,42 +76,60 @@ public class Magnet : MonoBehaviour
         
         float distance = Vector2.Distance(transform.position, ball.transform.position);
         float surfaceDistance = magnetRadius + ballRadius;
-        if(isTrapMagnet==false)
+        if(isTrapMagnet==false&&isParabolic==false)
         {
-        // Check if ball should be "stuck" (for attract magnets only)
-        if (isAttract && distance <= surfaceDistance + deadZoneRadius)
-        {
-            if (ballRb.velocity.magnitude <= stopSpeedThreshold)
+            // Check if ball should be "stuck" (for attract magnets only)
+            if (isAttract && distance <= surfaceDistance + deadZoneRadius)
             {
-                // STICK the ball - complete stop
-                StickBallToSurface();
-                UpdateVisualFeedback();
-                return;
+                if (ballRb.velocity.magnitude <= stopSpeedThreshold)
+                {
+                    // STICK the ball - complete stop
+                    StickBallToSurface();
+                    UpdateVisualFeedback();
+                    return;
+                }
             }
-        }
-        
-        // Check if stuck ball should be released
-        if (ballIsStuck)
-        {
-            if (!isAttract || distance > surfaceDistance + deadZoneRadius * 2f)
+            
+            // Check if stuck ball should be released
+            if (ballIsStuck)
             {
-                ballIsStuck = false; // Release the ball
+                if (!isAttract || distance > surfaceDistance + deadZoneRadius * 2f)
+                {
+                    ballIsStuck = false; // Release the ball
+                }
+                else
+                {
+                    // Keep it stuck
+                    StickBallToSurface();
+                    UpdateVisualFeedback();
+                    return;
+                }
             }
-            else
-            {
-                // Keep it stuck
-                StickBallToSurface();
-                UpdateVisualFeedback();
-                return;
-            }
+            
+            Vector2 force = CalculateMagneticForce();
+            ApplySmoothForce(force);
         }
-        
-        Vector2 force = CalculateMagneticForce();
-        ApplySmoothForce(force);
-        }
-        else
+        else if(isTrapMagnet)
         {
             TrapMagnet();
+        }
+        else if(isParabolic)
+        {
+            if (ballIsStuck)
+            {
+                if (!isAttract || distance > surfaceDistance + deadZoneRadius * 2f)
+                {
+                    ballIsStuck = false; // Release the ball
+                }
+                else
+                {
+                    // Keep it stuck
+                    StickBallToSurface();
+                    UpdateVisualFeedback();
+                    return;
+                }
+            }
+            ParabolicMagnet();
         }
 
         UpdateVisualFeedback();
@@ -199,6 +218,10 @@ public class Magnet : MonoBehaviour
             {
             baseColor = Color.blue;
             }
+            else if(isParabolic)
+            {
+                baseColor = new Color(1f, 0.0f, 0.617527f, 0.95f);
+            }
             else
             {
             baseColor = Color.red;
@@ -230,6 +253,10 @@ public class Magnet : MonoBehaviour
             {
             currentColor = Color.blue;
             }
+            else if(isParabolic)
+            {
+                currentColor = new Color(1f, 0.0f, 0.617527f, 0.95f);
+            }
             else 
             {
             currentColor = Color.red;
@@ -249,6 +276,10 @@ public class Magnet : MonoBehaviour
             {
             sr.color = Color.blue;
             }
+            else if(isParabolic)
+            {
+                sr.color = new Color(1f, 0.0f, 0.617527f, 0.95f);
+            }        
             else
             {
             sr.color = Color.red;
@@ -294,5 +325,39 @@ public class Magnet : MonoBehaviour
                 }
             }
         }
+    }
+
+    void ParabolicMagnet()
+    {
+         // Calculate the parabolic force
+         Debug.Log("parabolic");
+        Vector2 magnetPos = transform.position;
+        Vector2 targetPos = new Vector2(Random.Range(-range,range),Random.Range(-range,range));
+        Vector2 ballPos = ballRb.position;
+        float forceStrength = strength/2f;
+        float parabolaHeight = 2f;
+        // Calculate the horizontal distance from magnet to target
+        float totalDistance = Vector2.Distance(magnetPos, targetPos);
+        if (totalDistance == 0) return; // Avoid division by zero
+
+        // Current progress of the ball along the horizontal axis (from magnet to target)
+        Vector2 magnetToBall = ballPos - magnetPos;
+        Vector2 magnetToTarget = targetPos - magnetPos;
+        float progress = Vector2.Dot(magnetToBall, magnetToTarget.normalized) / totalDistance;
+        progress = Mathf.Clamp01(progress); // Normalize to [0,1]
+
+        // Calculate desired Y position for a parabola
+        // Parabola equation: y = -4h * x * (x-1), where h is max height at x=0.5
+        float desiredY = 4f * parabolaHeight * progress * (progress - 1f);
+        Vector2 desiredPos = magnetPos + magnetToTarget.normalized * progress * totalDistance;
+        desiredPos.y += desiredY;
+
+        // Calculate the direction to steer the ball toward the desired position
+        Vector2 toDesiredPos = desiredPos - ballPos;
+        float distanceToDesired = toDesiredPos.magnitude;
+
+        // Apply force proportional to distance and strength
+        Vector2 force = toDesiredPos.normalized * forceStrength * distanceToDesired;
+        ballRb.AddForce(force, ForceMode2D.Force);
     }
 }
