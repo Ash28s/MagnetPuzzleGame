@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6071349672546392964}
   - component: {fileID: 377942428691905830}
   - component: {fileID: 3452529784737388458}
+  - component: {fileID: 9071394035284090085}
   m_Layer: 0
   m_Name: Magnet
   m_TagString: Untagged
@@ -50,6 +51,7 @@ MonoBehaviour:
   strength: 10
   range: 5
   isTrapMagnet: 0
+  isParabolic: 0
   magnetRadius: 0.4
   maxForce: 15
   smoothingFactor: 0.7
@@ -145,3 +147,24 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0.114712775}
   serializedVersion: 2
   m_Radius: 0.7452776
+--- !u!114 &9071394035284090085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2833959932911514628}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c1ea6f01b1299e4c89a67fc9b3d3a3f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableLine: 1
+  minWidth: 0.03
+  maxWidth: 0.12
+  pulseSpeed: 6
+  alpha: 0.9
+  lineMaterial: {fileID: 0}
+  attractColor: {r: 0.3, g: 0.7, b: 1, a: 1}
+  repelColor: {r: 1, g: 0.4, b: 0.4, a: 1}
+  trapColor: {r: 1, g: 0.9, b: 0.2, a: 1}
