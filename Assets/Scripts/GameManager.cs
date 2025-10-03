@@ -109,6 +109,9 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI magnetRepelText;
     public TextMeshProUGUI magnetTrapText;
     public TextMeshProUGUI magnetParabolicText;
+    public GameObject objectMagnetPanel;
+    public GameObject paraMagnetPanel;
+
     private bool isGameOver = false;
     void Awake()
     {
@@ -126,6 +129,17 @@ public class GameManager : MonoBehaviour
         magnetRepelText.text = (maxRepelMagnets).ToString();
         magnetTrapText.text = (maxTrapMagnets).ToString();
         magnetParabolicText.text = maxParabolicMagnets.ToString();
+        bool firstMagnet = Random.Range(-1,1)>0?true:false;
+        if(firstMagnet)
+        {
+            objectMagnetPanel.SetActive(true);
+            paraMagnetPanel.SetActive(false);
+        }
+        else
+        {
+            objectMagnetPanel.SetActive(false);
+            paraMagnetPanel.SetActive(true);
+        }
     }
 
     void Update()
