@@ -83,13 +83,13 @@ public class MagnetSpawnSelector : MonoBehaviour
         }
 
         if (attractLabel != null)
-            attractLabel.text = (PendingSpawn == PendingSpawnType.Attract) ? "Attract (READY)" : "Attract";
+            attractLabel.text = (PendingSpawn == PendingSpawnType.Attract) ? "Attract" : "Attract";
         if (repelLabel != null)
-            repelLabel.text = (PendingSpawn == PendingSpawnType.Repel) ? "Repel (READY)" : "Repel";
+            repelLabel.text = (PendingSpawn == PendingSpawnType.Repel) ? "Repel" : "Repel";
         if (trapMagLabel != null)
-            trapMagLabel.text = (PendingSpawn == PendingSpawnType.Trap) ? "Trap Magnet (READY)" : "Trap Magnet";  
+            trapMagLabel.text = (PendingSpawn == PendingSpawnType.Trap) ? "Obstacle" : "Obstacle";  
         if (parabolicMagLabel != null)
-            parabolicMagLabel.text = (PendingSpawn == PendingSpawnType.Parabolic) ? "Parabolic Magnet (READY)" : "Parabolic Magnet";  
+            parabolicMagLabel.text = (PendingSpawn == PendingSpawnType.Parabolic) ? "Parabolic" : "Parabolic";  
     }    
     
 }
