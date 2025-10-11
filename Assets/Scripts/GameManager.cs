@@ -83,7 +83,7 @@
 //     }
 // }
 
-
+using UnityEngine.UI;
 using UnityEngine;
 using TMPro;
 
@@ -95,7 +95,9 @@ public class GameManager : MonoBehaviour
     public float timeLimit = 60f; // Time limit in seconds
     private float currentTime;
     public TextMeshProUGUI timerText; // Assign in Inspector: UI text for timer
-
+    public Image timerRadi;
+    public Color maxTimeColor;
+    public Color lessTimeColor;
     [Header("Game Over Settings")]
     public GameObject gameOverPanel; // Assign in Inspector: GameOver UI panel
     public TextMeshProUGUI gameOverText; // Assign in Inspector: GameOver text
@@ -118,17 +120,18 @@ public class GameManager : MonoBehaviour
         
         int level = PlayerPrefs.GetInt("Level",1);
         // Initialize
-        currentTime = timeLimit+level*2.5f;
+        timeLimit = timeLimit+level*2.5f;
+        currentTime = timeLimit;
         maxAttractMagnets += (int)(maxAttractMagnets*level*0.1f); 
         maxRepelMagnets += (int)(maxRepelMagnets*level*0.1f); 
         maxTrapMagnets+=(int)(maxTrapMagnets*level*0.1f);
         maxParabolicMagnets+=(int)(maxParabolicMagnets*level*0.1f);
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         UpdateTimerDisplay();
-        magnetText.text = (maxAttractMagnets).ToString();
-        magnetRepelText.text = (maxRepelMagnets).ToString();
-        magnetTrapText.text = (maxTrapMagnets).ToString();
-        magnetParabolicText.text = maxParabolicMagnets.ToString();
+        magnetText.text = "x"+(maxAttractMagnets).ToString();
+        magnetRepelText.text = "x"+(maxRepelMagnets).ToString();
+        magnetTrapText.text = "x"+(maxTrapMagnets).ToString();
+        magnetParabolicText.text = "x"+maxParabolicMagnets.ToString();
         bool firstMagnet = Random.Range(-1,1)>0?true:false;
         if(firstMagnet)
         {
@@ -153,10 +156,10 @@ public class GameManager : MonoBehaviour
             {
                 TriggerGameOver("Time's Up!");
             }
-            magnetText.text = maxAttractMagnets.ToString();
-            magnetRepelText.text = (maxRepelMagnets).ToString();
-            magnetTrapText.text = (maxTrapMagnets).ToString();
-            magnetParabolicText.text = maxParabolicMagnets.ToString();
+            magnetText.text = "x"+maxAttractMagnets.ToString();
+            magnetRepelText.text = "x"+(maxRepelMagnets).ToString();
+            magnetTrapText.text = "x"+(maxTrapMagnets).ToString();
+            magnetParabolicText.text = "x"+maxParabolicMagnets.ToString();
         }
     }
 
@@ -167,6 +170,11 @@ public class GameManager : MonoBehaviour
             int minutes = Mathf.FloorToInt(currentTime / 60);
             int seconds = Mathf.FloorToInt(currentTime % 60);
             timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+            timerRadi.fillAmount = currentTime/timeLimit;
+            if(currentTime/timeLimit>0.2f)
+                timerRadi.color = maxTimeColor;
+            else
+                timerRadi.color = lessTimeColor;    
         }
     }
 

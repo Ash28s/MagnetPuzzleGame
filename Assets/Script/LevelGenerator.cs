@@ -23,7 +23,7 @@ public class LevelGenerator : MonoBehaviour
     {
         level = PlayerPrefs.GetInt("Level",1);
         Random.InitState(level);
-        levelTxt.text = "Lv "+level.ToString();
+        levelTxt.text = "Level  "+level.ToString();
         GenerateLevel();
     }
 
