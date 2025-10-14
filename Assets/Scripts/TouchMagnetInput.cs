@@ -265,7 +265,7 @@ public class TouchMagnetInput : MonoBehaviour
             m.name = "Parabolic_Magnet";
         }
         Debug.Log($"Spawned {(MagnetSpawnSelector.PendingSpawn)} magnet @ {world}");
-        gameManager.MagnetSpawned();
+    
         if (pending == MagnetSpawnSelector.PendingSpawnType.Trap)
         {
             gameManager.TrapMagnetSpawned();
