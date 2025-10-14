@@ -86,6 +86,7 @@
 using UnityEngine.UI;
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
@@ -101,6 +102,7 @@ public class GameManager : MonoBehaviour
     [Header("Game Over Settings")]
     public GameObject gameOverPanel; // Assign in Inspector: GameOver UI panel
     public TextMeshProUGUI gameOverText; // Assign in Inspector: GameOver text
+    public GameObject wonPanel;
 
     [Header("Magnet Limit")]
     public int maxAttractMagnets = 5; // Maximum number of magnets allowed
@@ -115,6 +117,8 @@ public class GameManager : MonoBehaviour
     public GameObject paraMagnetPanel;
 
     private bool isGameOver = false;
+    private bool isGameWon = false;
+    
     void Awake()
     {
         
@@ -142,6 +146,11 @@ public class GameManager : MonoBehaviour
         {
             objectMagnetPanel.SetActive(false);
             paraMagnetPanel.SetActive(true);
+        }
+                
+        if(wonPanel==null)
+        {
+            wonPanel = GameObject.FindGameObjectWithTag("WonPanel");
         }
     }
 
@@ -178,11 +187,28 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void TriggerWin()
+    {
+        if(isGameOver==false && isGameWon==false)
+        {
+            isGameWon = true;
+            StartCoroutine(PopupWonPanel());
+        }
+    }
+
+    IEnumerator PopupWonPanel()
+    {
+        yield return new WaitForSeconds(0.5f);
+        int level = PlayerPrefs.GetInt("Level",1)+1;
+        PlayerPrefs.SetInt("Level",level);
+        wonPanel.SetActive(true);
+    }
+
     // CHANGED: Made this method PUBLIC and added string parameter
     public void TriggerGameOver(string reason = "Game Over!")
     {
         if (isGameOver) return; // Prevent multiple calls
-        
+        if(isGameWon) return;
         isGameOver = true;
         Debug.Log("Game Over triggered: " + reason);
         
@@ -221,6 +247,7 @@ public class GameManager : MonoBehaviour
 
     public void MagnetSpawned()
     {
+        Debug.Log(maxAttractMagnets+" max");
         maxAttractMagnets--;
     }
     
